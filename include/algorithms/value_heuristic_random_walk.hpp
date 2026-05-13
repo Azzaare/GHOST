@@ -30,47 +30,24 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 
-#include "../search_unit_data.hpp"
-#include "../constraint.hpp"
-#include "../variable.hpp"
+#include "value_heuristic.hpp"
 
 namespace ghost
 {
 	namespace algorithms
 	{
-		/*
-		 * Strategy design pattern to implement error projection algorithm.
-		 */
-		class ErrorProjection
+		class ValueHeuristicRandomWalk : public ValueHeuristic
 		{
-		protected:
-			// Protected string variable for the heuristic name. Used for debug/trace purposes.
-			std::string name;
-
 		public:
-			ErrorProjection( std::string&& name );
-
-			// Default virtual destructor.
-			virtual ~ErrorProjection() = default;
-
-			// Inline function returning the algorithm name.
-			inline std::string get_name() const { return name; }
-
-			// Can be useful to initialize some data structures before computing error projections.
-			virtual void initialize_data_structures( const SearchUnitData& data );
-
-			// Will reset data.error_variables and set the element of this vector to their projected cost
-			virtual void compute_variable_errors( const std::vector<Variable>& variables,
-			                                      const std::vector<std::shared_ptr<Constraint>>& constraints,
-			                                      SearchUnitData& data ) = 0;
-
-			// Incremental update of data.error_variables
-			virtual void update_variable_errors( const std::vector<Variable>& variables,
-			                                     std::shared_ptr<Constraint> constraint,
-			                                     SearchUnitData& data,
-			                                     double delta ) = 0;
+			ValueHeuristicRandomWalk();
+			
+			int select_value( int variable_to_change,
+			                  const SearchUnitData& data,
+			                  const Model& model,
+			                  const std::map<int, std::vector<double>>& delta_errors,
+			                  double& min_conflict,
+			                  randutils::mt19937_rng& rng ) const override;
 		};
 	}
 }

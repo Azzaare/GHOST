@@ -27,17 +27,15 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "algorithms/antidote_search_variable_heuristic.hpp"
-#include "thirdparty/randutils.hpp"
+#include "algorithms/variable_heuristic_uniform.hpp"
 
-using ghost::algorithms::AntidoteSearchVariableHeuristic;
+using ghost::algorithms::VariableHeuristicUniform;
 
-AntidoteSearchVariableHeuristic::AntidoteSearchVariableHeuristic()
-	: VariableHeuristic( "Antidote Search" )
+VariableHeuristicUniform::VariableHeuristicUniform()
+	: VariableHeuristic( "Uniform" )
 { }
-		
-int AntidoteSearchVariableHeuristic::select_variable( const std::vector<double>& candidates, const SearchUnitData& data, randutils::mt19937_rng& rng ) const
+
+int VariableHeuristicUniform::select_variable( const std::vector<double>& candidates, const SearchUnitData& data, randutils::mt19937_rng& rng ) const
 {
-	// WARNING: must remove variables which are in any constraints
-	return rng.variate<int, std::discrete_distribution>( candidates.begin(), candidates.end() );
+	return static_cast<int>( rng.pick( candidates ) );
 }

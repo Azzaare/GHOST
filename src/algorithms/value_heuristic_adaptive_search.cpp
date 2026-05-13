@@ -30,17 +30,17 @@
 #include <algorithm>
 #include <numeric>
 
-#include "algorithms/adaptive_search_value_heuristic.hpp"
+#include "algorithms/value_heuristic_adaptive_search.hpp"
 
-using ghost::algorithms::AdaptiveSearchValueHeuristic;
+using ghost::algorithms::ValueHeuristicAdaptiveSearch;
 using ghost::SearchUnitData;
 using ghost::Model;
 
-AdaptiveSearchValueHeuristic::AdaptiveSearchValueHeuristic()
+ValueHeuristicAdaptiveSearch::ValueHeuristicAdaptiveSearch()
 	: ValueHeuristic( "Adaptive Search" )
 { }
 		
-int AdaptiveSearchValueHeuristic::select_value( int variable_to_change,
+int ValueHeuristicAdaptiveSearch::select_value( int variable_to_change,
                                                 const SearchUnitData& data,
                                                 const Model& model,
                                                 const std::map<int, std::vector<double>>& delta_errors,

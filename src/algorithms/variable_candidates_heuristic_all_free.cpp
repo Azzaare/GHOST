@@ -27,15 +27,20 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "algorithms/uniform_variable_heuristic.hpp"
+#include "algorithms/variable_candidates_heuristic_all_free.hpp"
 
-using ghost::algorithms::UniformVariableHeuristic;
+using ghost::algorithms::VariableCandidatesHeuristicAllFree;
 
-UniformVariableHeuristic::UniformVariableHeuristic()
-	: VariableHeuristic( "Uniform" )
+VariableCandidatesHeuristicAllFree::VariableCandidatesHeuristicAllFree()
+	: VariableCandidatesHeuristic( "All Free" )
 { }
-
-int UniformVariableHeuristic::select_variable( const std::vector<double>& candidates, const SearchUnitData& data, randutils::mt19937_rng& rng ) const
+		
+std::vector<double> VariableCandidatesHeuristicAllFree::compute_variable_candidates( const SearchUnitData& data ) const
 {
-	return static_cast<int>( rng.pick( candidates ) );
+	std::vector<double> free_variables_list;
+	for( int variable_id = 0 ; variable_id < data.number_variables ; ++variable_id )
+		if( data.tabu_list[ variable_id ] <= data.local_moves )
+			free_variables_list.push_back( variable_id );
+	
+	return free_variables_list;
 }

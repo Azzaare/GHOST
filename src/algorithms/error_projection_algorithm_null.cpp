@@ -27,27 +27,23 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
-#pragma once
+#include "algorithms/error_projection_algorithm_null.hpp"
 
-#include <vector>
+using ghost::algorithms::ErrorProjectionNull;
+using ghost::Variable;
+using ghost::Constraint;
 
-#include "value_heuristic.hpp"
+ErrorProjectionNull::ErrorProjectionNull()
+	: ErrorProjection( "Null Error Projection" )
+{}
 
-namespace ghost
-{
-	namespace algorithms
-	{
-		class RandomWalkValueHeuristic : public ValueHeuristic
-		{
-		public:
-			RandomWalkValueHeuristic();
-			
-			int select_value( int variable_to_change,
-			                  const SearchUnitData& data,
-			                  const Model& model,
-			                  const std::map<int, std::vector<double>>& delta_errors,
-			                  double& min_conflict,
-			                  randutils::mt19937_rng& rng ) const override;
-		};
-	}
-}
+void ErrorProjectionNull::compute_variable_errors( const std::vector<Variable>& variables,                                                             
+                                                   const std::vector<std::shared_ptr<Constraint>>& constraints,
+                                                   SearchUnitData& data )
+{}
+
+void ErrorProjectionNull::update_variable_errors( const std::vector<Variable>& variables,
+                                                  std::shared_ptr<Constraint> constraint,
+                                                  SearchUnitData& data,                                                            
+                                                  double delta )
+{}

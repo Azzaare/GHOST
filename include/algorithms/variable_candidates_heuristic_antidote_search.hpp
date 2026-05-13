@@ -27,23 +27,22 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "algorithms/null_error_projection_algorithm.hpp"
+#pragma once
 
-using ghost::algorithms::NullErrorProjection;
-using ghost::Variable;
-using ghost::Constraint;
+#include <vector>
 
-NullErrorProjection::NullErrorProjection()
-	: ErrorProjection( "Null Error Projection" )
-{}
+#include "variable_candidates_heuristic.hpp"
 
-void NullErrorProjection::compute_variable_errors( const std::vector<Variable>& variables,                                                             
-                                                   const std::vector<std::shared_ptr<Constraint>>& constraints,
-                                                   SearchUnitData& data )
-{}
-
-void NullErrorProjection::update_variable_errors( const std::vector<Variable>& variables,
-                                                  std::shared_ptr<Constraint> constraint,
-                                                  SearchUnitData& data,                                                            
-                                                  double delta )
-{}
+namespace ghost
+{
+	namespace algorithms
+	{
+		class VariableCandidatesHeuristicAntidoteSearch : public VariableCandidatesHeuristic
+		{
+		public:
+			VariableCandidatesHeuristicAntidoteSearch();
+			
+			std::vector<double> compute_variable_candidates( const SearchUnitData& data ) const override;
+		};
+	}
+}

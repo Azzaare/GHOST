@@ -30,16 +30,16 @@
 #include <algorithm>
 #include <numeric>
 
-#include "algorithms/antidote_search_value_heuristic.hpp"
+#include "algorithms/value_heuristic_antidote_search.hpp"
 #include "thirdparty/randutils.hpp"
 
-using ghost::algorithms::AntidoteSearchValueHeuristic;
+using ghost::algorithms::ValueHeuristicAntidoteSearch;
 
-AntidoteSearchValueHeuristic::AntidoteSearchValueHeuristic()
+ValueHeuristicAntidoteSearch::ValueHeuristicAntidoteSearch()
 	: ValueHeuristic( "Antidote Search" )
 { }
 		
-int AntidoteSearchValueHeuristic::select_value( int variable_to_change,
+int ValueHeuristicAntidoteSearch::select_value( int variable_to_change,
                                                 const SearchUnitData& data,
                                                 const Model& model,
                                                 const std::map<int, std::vector<double>>& delta_errors,

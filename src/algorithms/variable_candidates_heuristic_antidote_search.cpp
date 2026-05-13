@@ -27,27 +27,22 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
-#pragma once
+#include "algorithms/variable_candidates_heuristic_antidote_search.hpp"
+#include "thirdparty/randutils.hpp"
 
-#include "error_projection_algorithm.hpp"
+using ghost::algorithms::VariableCandidatesHeuristicAntidoteSearch;
 
-namespace ghost
+VariableCandidatesHeuristicAntidoteSearch::VariableCandidatesHeuristicAntidoteSearch()
+	: VariableCandidatesHeuristic( "Antidote Search" )
+{ }
+
+std::vector<double> VariableCandidatesHeuristicAntidoteSearch::compute_variable_candidates( const SearchUnitData& data ) const
 {
-	namespace algorithms
-	{
-		class NullErrorProjection : public ErrorProjection
-		{
-		public:
-			NullErrorProjection();
-			
-			void compute_variable_errors( const std::vector<Variable>& variables,
-			                              const std::vector<std::shared_ptr<Constraint>>& constraints,
-			                              SearchUnitData& data ) override;
-			
-			void update_variable_errors( const std::vector<Variable>& variables,
-			                             std::shared_ptr<Constraint> constraint,
-			                             SearchUnitData& data,
-			                             double delta ) override;
-		};
-	}
+	auto error_variables = data.error_variables;
+		
+	for( int variable_id = 0; variable_id < data.number_variables; ++variable_id )
+		if( data.tabu_list[ variable_id ] > data.local_moves )
+			error_variables[ variable_id ] = 0.0;
+
+	return error_variables;
 }

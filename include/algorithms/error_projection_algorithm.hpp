@@ -33,8 +33,7 @@
 #include <memory>
 
 #include "../search_unit_data.hpp"
-#include "../constraint.hpp"
-#include "../variable.hpp"
+#include "../model.hpp"
 
 namespace ghost
 {
@@ -62,12 +61,11 @@ namespace ghost
 			virtual void initialize_data_structures( const SearchUnitData& data );
 
 			// Will reset data.error_variables and set the element of this vector to their projected cost
-			virtual void compute_variable_errors( const std::vector<Variable>& variables,
-			                                      const std::vector<std::shared_ptr<Constraint>>& constraints,
+			virtual void compute_variable_errors( const Model& model,
 			                                      SearchUnitData& data ) = 0;
 
 			// Incremental update of data.error_variables
-			virtual void update_variable_errors( const std::vector<Variable>& variables,
+			virtual void update_variable_errors( const Model& model,
 			                                     std::shared_ptr<Constraint> constraint,
 			                                     SearchUnitData& data,
 			                                     double delta ) = 0;

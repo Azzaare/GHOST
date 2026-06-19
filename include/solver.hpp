@@ -941,7 +941,7 @@ namespace ghost
 
 			std::vector< std::vector<int> > domains;
 			for( auto& var : _model.variables )
-				domains.emplace_back( var.get_full_domain() );
+				domains.emplace_back( _model.get_full_domain_of_variable( var.get_id() ) );
 
 			_matrix_var_ctr.resize( _model.variables.size() );
 			for( int variable_id = 0; variable_id < static_cast<int>( _model.variables.size() ); ++variable_id )

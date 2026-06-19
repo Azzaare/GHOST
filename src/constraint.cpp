@@ -75,7 +75,7 @@ double Constraint::delta_error( const std::vector<int>& variables_index, const s
 	double value = optional_delta_error( _variables, variables_index_within_constraint, new_values );
 	if( std::isnan( value ) )
 	{
-		std::vector<Variable> changed_variables( _variables.size() );
+		std::vector<ghost::Variable> changed_variables( _variables.size() );
 		std::transform( _variables.begin(),
 		                _variables.end(),
 		                changed_variables.begin(),

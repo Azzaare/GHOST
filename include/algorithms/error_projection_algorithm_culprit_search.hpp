@@ -39,7 +39,7 @@ namespace ghost
 		{
 			std::vector<std::vector<double>> _error_variables_by_constraints;
 			
-			void compute_variable_errors_on_constraint( const std::vector<Variable>& variables,
+			void compute_variable_errors_on_constraint( const Model& model,
 			                                            const std::vector<std::vector<int>>& matrix_var_ctr,
 			                                            std::shared_ptr<Constraint> constraint );
 			
@@ -48,11 +48,10 @@ namespace ghost
 
 			void initialize_data_structures( const SearchUnitData& data ) override;
 
-			void compute_variable_errors( const std::vector<Variable>& variables,
-			                              const std::vector<std::shared_ptr<Constraint>>& constraints,
+			void compute_variable_errors( const Model& model,
 			                              SearchUnitData& data ) override;
 			
-			void update_variable_errors( const std::vector<Variable>& variables,
+			void update_variable_errors( const Model& model,
 			                             std::shared_ptr<Constraint> constraint,
 			                             SearchUnitData& data,
 			                             double delta ) override;

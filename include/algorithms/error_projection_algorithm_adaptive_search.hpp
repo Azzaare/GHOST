@@ -40,11 +40,10 @@ namespace ghost
 		public:
 			ErrorProjectionAdaptiveSearch();
 			
-			void compute_variable_errors( const std::vector<Variable>& variables,
-			                              const std::vector<std::shared_ptr<Constraint>>& constraints,
+			void compute_variable_errors( const Model& model,
 			                              SearchUnitData& data ) override;
 			
-			void update_variable_errors( const std::vector<Variable>& variables,
+			void update_variable_errors( const Model& model,
 			                             std::shared_ptr<Constraint> constraint,
 			                             SearchUnitData& data,
 			                             double delta ) override;

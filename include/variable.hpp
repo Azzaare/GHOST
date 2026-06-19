@@ -55,114 +55,67 @@ namespace ghost
 	 */
 	class Variable final
 	{
-		friend class SearchUnit;
+		friend class SearchUnit; // TODO: still necessary?
 		friend class ModelBuilder;
+		friend class Constraint;
 
-		std::vector<int> _domain; // The domain, i.e., the vector of values the variable can take.
 		int _id; // Unique ID integer
 		std::string _name;	// String to give a name to the variable, helpful to debug/trace.
-
 		int	_current_value;	// Current value assigned to the variable.
-		int _min_value; // minimal value in the domain
-		int _max_value; // maximal value in the domain
-
+		std::vector<int>* _domain; // Pointer to the domain of the variable (located in the model).
+		
+		inline static int _count = 0;
+		
 		struct valueException : std::exception
 		{
 			int value;
-			int min;
-			int max;
-			valueException( int value, int min, int max ) : value( value ), min( min ), max( max ) {}
-			std::string message = "Wrong value " + std::to_string( value ) + " passed to Variable::set_value. The given value does not belong to the domain and/or is not be between "
-				+ std::to_string( min ) + " (included) and "
-				+ std::to_string( max ) + " (included).\n";
+			valueException( int value ) : value( value ) {}
+			std::string message = "Wrong value " + std::to_string( value ) + " passed to Variable::set_value. The given value does not belong to the domain.\n";
 			const char* what() const noexcept { return message.c_str(); }
 		};
 
-		// Assign to the variable a random values from its domain.
-		inline void pick_random_value( randutils::mt19937_rng& rng ) {	_current_value = rng.pick( _domain ); }
+		// /*!
+		//  * Constructor building a contiguous domain with all intergers from starting_value to 
+		//  * starting_value + size-1.
+		//  *
+		//  * \param starting_value an integer representing the first value of the domain.
+		//  * The creating domain will then be the interval [starting_value, starting_value + size - 1].
+		//  * \param size a size_t corresponding to the size of the domain to create.
+		//  * \param index the position in the domain corresponding to the variable initial value.
+		//  * For instance with the domain [1, 2, 5, 7, 8], if index equals to 3 then the variable 
+		//  * initial value is 7. By default, the index is zero.
+		//  * \param name a const reference of a string to give a name to the variable. If no names are
+		//  * given, GHOST will automatically rename variables by "vx", with x the variable ID.
+		//  */
+		// Variable( int starting_value,
+		//           std::size_t size,
+		//           int	index = 0,
+		//           const std::string& name = std::string() );
+
+		// /*!
+		//  * Equivalent to the constructor Variable(domain, index, name).
+		//  *
+		//  * It simply calls Variable(0, name).
+		//  *
+		//  * \param name a const reference of a string to give a name to the variable.
+		//  */
+		// Variable( const std::string& name );
+
+		// /*!
+		//  * Equivalent to the constructor Variable(starting_value, size, index, name).
+		//  *
+		//  * It simply calls Variable(starting_value, size, 0, name).
+		//  *
+		//  * \param starting_value an integer representing the first value of the domain.
+		//  * The creating domain will then be the interval [starting_value, starting_value + size - 1].
+		//  * \param size a size_t corresponding to the size of the domain to create.
+		//  * \param name a const reference of a string to give a name to the variable.
+		//  */
+		// Variable( int starting_value,
+		//           std::size_t size,
+		//           const std::string& name );
 
 	public:
-		//! Default constructor
-		Variable() = default;
-
-		/*!
-		 * Constructor with the domain as input.
-		 *
-		 * This is the only constructor able to give a non-contiguous domain to a variable, i.e.,
-		 * a domain with "holes" like [1, 2, 5, 7, 8], where 3, 4 and 6 are missing.
-		 *
-		 * \param domain a const reference to the vector of integers composing the domain
-		 * to create.
-		 * \param index the position in the domain corresponding to the variable initial value.
-		 * For instance with the domain [1, 2, 5, 7, 8], if index equals to 3 then the variable 
-		 * initial value is 7. By default, the index is zero.
-		 * \param name a const reference of a string to give a name to the variable. If no names are
-		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
-		 */
-		Variable( const std::vector<int>& domain,
-		          int	index = 0,
-		          const std::string& name = std::string() );
-
-		/*!
-		 * Constructor building a contiguous domain with all intergers from starting_value to 
-		 * starting_value + size-1.
-		 *
-		 * \param starting_value an integer representing the first value of the domain.
-		 * The creating domain will then be the interval [starting_value, starting_value + size - 1].
-		 * \param size a size_t corresponding to the size of the domain to create.
-		 * \param index the position in the domain corresponding to the variable initial value.
-		 * For instance with the domain [1, 2, 5, 7, 8], if index equals to 3 then the variable 
-		 * initial value is 7. By default, the index is zero.
-		 * \param name a const reference of a string to give a name to the variable. If no names are
-		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
-		 */
-		Variable( int starting_value,
-		          std::size_t size,
-		          int	index = 0,
-		          const std::string& name = std::string() );
-
-		/*!
-		 * Equivalent to the constructor Variable(domain, index, name).
-		 *
-		 * It simply calls Variable(domain, 0, name).
-		 *
-		 * \param domain a const reference to the vector of integers composing the domain
-		 * to create.
-		 * \param name a const reference of a string to give a name to the variable.
-		 */
-		Variable( const std::vector<int>& domain,
-		          const std::string& name );
-
-		/*!
-		 * Equivalent to the constructor Variable(starting_value, size, index, name).
-		 *
-		 * It simply calls Variable(starting_value, size, 0, name).
-		 *
-		 * \param starting_value an integer representing the first value of the domain.
-		 * The creating domain will then be the interval [starting_value, starting_value + size - 1].
-		 * \param size a size_t corresponding to the size of the domain to create.
-		 * \param name a const reference of a string to give a name to the variable.
-		 */
-		Variable( int starting_value,
-		          std::size_t size,
-		          const std::string& name );
-
-		/*!
-		 * Inline method returning the domain.
-		 *
-		 * \return The vector of integers composing the domain.
-		 */
-		inline std::vector<int> get_full_domain() const { return _domain; }
-
-		/*!
-		 * Method returning the range of values
-		 * [current_value - range/2 [mod domain_size], current_value + range/2 [mod domain_size]]
-		 * from the domain.
-		 *
-		 * \return A vector containing these integers.
-		 */
-		std::vector<int> get_partial_domain( int range ) const;
-
 		/*!
 		 * Inline method to get the current value of the variable.
 		 *
@@ -178,32 +131,11 @@ namespace ghost
 		 */
 		inline void	set_value( int value )
 		{
-			if( std::find( _domain.cbegin(), _domain.cend(), value ) == _domain.cend() )
-				throw valueException( value, get_domain_min_value(), get_domain_max_value() );
+			if( std::find( _domain->cbegin(), _domain->cend(), value ) == _domain->cend() )
+				throw valueException( value );
 
 			_current_value = value;
 		}
-
-		/*!
-		 * Inline method returning the size of the domain of the variable.
-		 *
-		 * \return A size_t equals to size of the domain of the variable.
-		 */
-		inline std::size_t get_domain_size() const { return _domain.size(); }
-
-		/*!
-		 * Inline method returning the minimal value in the variable's domain.
-		 *
-		 * \return The minimal value in the domain, in constant time.
-		 */
-		inline int get_domain_min_value() const { return _min_value; }
-
-		/*!
-		 * Inline method returning the maximal value in the variable's domain.
-		 *
-		 * \return The maximal value in the domain, in constant time.
-		 */
-		inline int get_domain_max_value() const { return _max_value; }
 
 		//! Inline accessor to get the variable name.
 		inline std::string get_name() const { return _name; }
@@ -215,7 +147,7 @@ namespace ghost
 		friend std::ostream& operator<<( std::ostream& os, const Variable& v )
 		{
 			std::string domain = "";
-			for( auto value : v.get_full_domain() )
+			for( auto value : *(v._domain) )
 				domain += std::to_string( value ) + std::string( ", " );
 
 			return os
@@ -225,5 +157,22 @@ namespace ghost
 				<< "\nDomain: " << domain
 				<< "\n--------";
 		}
+
+		//public:
+		// TODO: Make them private
+		//! Default constructor
+		Variable() = default;
+		// TODO Big 5. Pointer management.
+
+		/*!
+		 * Constructor with the domain as input.
+		 *
+		 * \param value the initial value of the variable.
+		 * \param name a const reference of a string to give a name to the variable. If no names are
+		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
+		 */
+		Variable( int	value,
+		          std::vector<int>* domain,
+		          const std::string& name = std::string() );
 	};
 }

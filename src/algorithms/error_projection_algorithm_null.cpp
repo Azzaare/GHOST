@@ -37,12 +37,11 @@ ErrorProjectionNull::ErrorProjectionNull()
 	: ErrorProjection( "Null Error Projection" )
 {}
 
-void ErrorProjectionNull::compute_variable_errors( const std::vector<Variable>& variables,                                                             
-                                                   const std::vector<std::shared_ptr<Constraint>>& constraints,
+void ErrorProjectionNull::compute_variable_errors( const Model& model,
                                                    SearchUnitData& data )
 {}
 
-void ErrorProjectionNull::update_variable_errors( const std::vector<Variable>& variables,
+void ErrorProjectionNull::update_variable_errors( const Model& model,
                                                   std::shared_ptr<Constraint> constraint,
                                                   SearchUnitData& data,                                                            
                                                   double delta )

@@ -27,6 +27,11 @@
  * along with GHOST. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <numeric>
+#include <sstream>
+
+#include <iostream>
+
 #include "model_builder.hpp"
 
 using ghost::ModelBuilder;
@@ -38,21 +43,28 @@ ModelBuilder::ModelBuilder( bool permutation_problem )
 
 Model ModelBuilder::build_model()
 {
+	// Necessary reinitializations, if build_model() is called more than once during the program execution.
 	variables.clear();
+	domains.clear();
+	_created_domains.clear();
+	_domain_of_variable.clear();
 	constraints.clear();
+	ghost::Variable::_count = 0; 
 
 	declare_variables();
+
 	// Set the id of each variable object to be their index in the _variables vector
 	for( int variable_id = 0 ; variable_id < static_cast<int>( variables.size() ) ; ++variable_id )
-	{
-		variables[ variable_id ]._id = variable_id;
 		if( variables[ variable_id ]._name.empty() )
 			variables[ variable_id ]._name = "v" + std::to_string( variable_id );
-	}
+
+	std::cout << "Number of domains created: " << _created_domains.size() << "\n";
+	
+	//TODO how to combine variables and domains declaration?
 
 	// Auxiliary data may be needed by the constraints and the objective function,
 	// so it must be defined before them.
-	declare_auxiliary_data();		
+	declare_auxiliary_data();
 	declare_constraints();
 	declare_objective();
 
@@ -86,19 +98,60 @@ Model ModelBuilder::build_model()
 		objective->_variables_position[ objective->_variables_index[ index ] ] = index;
 	}
 
-	return Model( std::move( variables ), constraints, objective, auxiliary_data, permutation_problem );
+	return Model( std::move( variables ),
+	              std::move( domains ),
+	              std::move( _domain_of_variable ),
+	              constraints,
+	              objective,
+	              auxiliary_data,
+	              permutation_problem );
+}
+
+std::string ModelBuilder::make_key( const std::vector<int>& vec)
+{
+	std::stringstream stream;
+	for( const auto& element : vec )
+		stream << element << "_";
+	return stream.str();
+}
+
+void ModelBuilder::create_variable( std::vector< int > domain, int index )
+{
+	std::sort( domain.begin(), domain.end() );
+	int var_id = static_cast<int>( variables.size() );
+
+	std::string key = make_key( domain );
+	if( _created_domains.contains( key ) )
+		_domain_of_variable[ var_id ] = _created_domains[ key ] ;
+	else
+	{
+		domains.emplace_back( domain );
+		int dom_index = static_cast<int>( domains.size() ) - 1;
+		_domain_of_variable[ var_id ] = dom_index;
+		_created_domains[ key ] = dom_index;
+	}
+
+	variables.emplace_back( domain[index], &(domains[domains.size()-1]) ); //&(*domains.rend())
+}
+
+void ModelBuilder::create_variable( int starting_value, std::size_t size, int index )
+{
+	std::vector<int> dom( size );
+	std::iota( dom.begin(), dom.end(), starting_value );
+
+	create_variable( dom, index );
 }
 
 void ModelBuilder::create_n_variables( int number, const std::vector<int>& domain, int index )
 {
 	for( int i = 0 ; i < number ; ++i )
-		variables.emplace_back( domain, index );
+		create_variable( domain, index );
 }
 
 void ModelBuilder::create_n_variables( int number, int starting_value, std::size_t size, int index )
 {
 	for( int i = 0 ; i < number ; ++i )
-		variables.emplace_back( starting_value, size, index );
+		create_variable( starting_value, size, index );
 }
 
 void ModelBuilder::declare_constraints()

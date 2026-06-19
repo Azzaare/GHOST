@@ -39,7 +39,7 @@ using ghost::Model;
 ValueHeuristicAdaptiveSearch::ValueHeuristicAdaptiveSearch()
 	: ValueHeuristic( "Adaptive Search" )
 { }
-		
+
 int ValueHeuristicAdaptiveSearch::select_value( int variable_to_change,
                                                 const SearchUnitData& data,
                                                 const Model& model,

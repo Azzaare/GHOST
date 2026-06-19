@@ -37,18 +37,17 @@ ErrorProjectionAdaptiveSearch::ErrorProjectionAdaptiveSearch()
 	: ErrorProjection( "Adaptive Search" )
 { }
 
-void ErrorProjectionAdaptiveSearch::compute_variable_errors( const std::vector<Variable>& variables,                                                             
-                                                             const std::vector<std::shared_ptr<Constraint>>& constraints,
+void ErrorProjectionAdaptiveSearch::compute_variable_errors( const Model& model,
                                                              SearchUnitData& data )
 {
 	std::fill( data.error_variables.begin(), data.error_variables.end(), 0. );
 
-	for( int variable_id = 0; variable_id < static_cast<int>( variables.size() ); ++variable_id )
+	for( int variable_id = 0; variable_id < static_cast<int>( model.variables.size() ); ++variable_id )
 		for( int constraint_id : data.matrix_var_ctr.at( variable_id ) )
-			data.error_variables[ variable_id ] += constraints[ constraint_id ]->_current_error;
+			data.error_variables[ variable_id ] += model.constraints[ constraint_id ]->_current_error;
 }
 
-void ErrorProjectionAdaptiveSearch::update_variable_errors( const std::vector<Variable>& variables,
+void ErrorProjectionAdaptiveSearch::update_variable_errors( const Model& model,
                                                             std::shared_ptr<Constraint> constraint,
                                                             SearchUnitData& data,                                                            
                                                             double delta )

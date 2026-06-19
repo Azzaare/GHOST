@@ -47,7 +47,7 @@ void ErrorProjectionCulpritSearch::initialize_data_structures( const SearchUnitD
 	_error_variables_by_constraints = std::vector<std::vector<double>>( data.number_constraints, std::vector<double>( data.number_variables, 0. ) );
 }
 
-void ErrorProjectionCulpritSearch::compute_variable_errors_on_constraint( const std::vector<Variable>& variables,
+void ErrorProjectionCulpritSearch::compute_variable_errors_on_constraint( const Model& model,
 	                                                                        const std::vector<std::vector<int>>& matrix_var_ctr,
 	                                                                        std::shared_ptr<Constraint> constraint )
 {
@@ -61,9 +61,9 @@ void ErrorProjectionCulpritSearch::compute_variable_errors_on_constraint( const 
 		
 		for( const int variable_id : constraint->get_variable_ids() )
 		{
-			if( variables[ variable_id ].get_domain_size() > 2 )
+			if( model.get_domain_size_of_variable( variable_id ) > 2 )
 			{
-				auto range = variables[ variable_id ].get_partial_domain( 3 );
+				auto range = model.get_partial_domain_of_variable( variable_id, 3 );
 				previous_value = range[0];
 				next_value = range[2];
 				
@@ -76,17 +76,17 @@ void ErrorProjectionCulpritSearch::compute_variable_errors_on_constraint( const 
 			}
 			else
 			{
-				if( variables[ variable_id ].get_domain_size() == 2 )
+				if( model.get_domain_size_of_variable( variable_id ) == 2 )
 				{
-					auto range = variables[ variable_id ].get_full_domain();
-					range.erase( std::find( range.begin(), range.end(), variables[ variable_id ].get_value() ) );
+					auto range = model.get_full_domain_of_variable( variable_id );
+					range.erase( std::find( range.begin(), range.end(), model.variables[ variable_id ].get_value() ) );
 					next_value = range[0];
 				
 					current_errors[ variable_id ] =	constraint->simulate_delta( std::vector<int>{variable_id}, std::vector<int>{next_value} );
 				}
 				else
 				{
-					current_errors[ variable_id ] =	constraint->simulate_delta( std::vector<int>{variable_id}, std::vector<int>{variables[ variable_id ].get_value()} );
+					current_errors[ variable_id ] =	constraint->simulate_delta( std::vector<int>{variable_id}, std::vector<int>{model.variables[ variable_id ].get_value()} );
 				}				
 			}
 		}
@@ -109,15 +109,14 @@ void ErrorProjectionCulpritSearch::compute_variable_errors_on_constraint( const 
 	}
 }
 
-void ErrorProjectionCulpritSearch::compute_variable_errors( const std::vector<Variable>& variables,
-                                                            const std::vector<std::shared_ptr<Constraint>>& constraints,
+void ErrorProjectionCulpritSearch::compute_variable_errors( const Model& model,
                                                             SearchUnitData& data )
 {
 	std::fill( data.error_variables.begin(), data.error_variables.end(), 0. );
 	
-	for( auto constraint : constraints )
+	for( auto constraint : model.constraints )
 	{
-		compute_variable_errors_on_constraint( variables, data.matrix_var_ctr, constraint );
+		compute_variable_errors_on_constraint( model, data.matrix_var_ctr, constraint );
 		
 		// add normalize deltas of the current constraint to the error variables vector.
 		std::transform( _error_variables_by_constraints[ constraint->_id ].cbegin(),
@@ -128,7 +127,7 @@ void ErrorProjectionCulpritSearch::compute_variable_errors( const std::vector<Va
 	}
 }
 
-void ErrorProjectionCulpritSearch::update_variable_errors( const std::vector<Variable>& variables,
+void ErrorProjectionCulpritSearch::update_variable_errors( const Model& model,
                                                            std::shared_ptr<Constraint> constraint,
                                                            SearchUnitData& data,
                                                            double delta )
@@ -140,7 +139,7 @@ void ErrorProjectionCulpritSearch::update_variable_errors( const std::vector<Var
 	                data.error_variables.begin(),
 	                std::minus<>{} );
 
-	compute_variable_errors_on_constraint( variables, data.matrix_var_ctr, constraint );
+	compute_variable_errors_on_constraint( model, data.matrix_var_ctr, constraint );
 
 	// add normalize deltas of the current constraint to the error variables vector.
 	std::transform( _error_variables_by_constraints[ constraint->_id ].cbegin(),

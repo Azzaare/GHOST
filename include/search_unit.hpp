@@ -78,6 +78,8 @@
 
 #include "macros.hpp"
 
+// TODO: SearchUnit not templated. Why all the code is in the header file?
+// TODO: Make SearchUnit final?
 namespace ghost
 {
 	/*
@@ -208,7 +210,8 @@ namespace ghost
 			rng.shuffle( variables_index );
 
 			for( int i = 0 ; i < nb_var ; ++i )
-				model.variables[ variables_index[ i ] ].pick_random_value( rng );
+				model.set_random_value_to_variable( variables_index[ i ], rng );
+				//model.variables[ variables_index[ i ] ].pick_random_value( rng );
 		}
 
 		// Sample an configuration for permutation problems
@@ -223,12 +226,12 @@ namespace ghost
 						if( rng.uniform( 0, 1 ) == 0
 						    && i != j
 						    && model.variables[ i ].get_value() != model.variables[ j ].get_value()
-						    && std::find( model.variables[ j ].get_full_domain().begin(),
-						                  model.variables[ j ].get_full_domain().end(),
-						                  model.variables[ i ].get_value() ) != model.variables[ j ].get_full_domain().end()
-						    && std::find( model.variables[ i ].get_full_domain().begin(),
-						                  model.variables[ i ].get_full_domain().end(),
-						                  model.variables[ j ].get_value() ) != model.variables[ i ].get_full_domain().end() )
+						    && std::find( model.get_full_domain_of_variable( j ).begin(),
+						                  model.get_full_domain_of_variable( j ).end(),
+						                  model.variables[ i ].get_value() ) != model.get_full_domain_of_variable( j ).end()
+						    && std::find( model.get_full_domain_of_variable( i ).begin(),
+						                  model.get_full_domain_of_variable( i ).end(),
+						                  model.variables[ j ].get_value() ) != model.get_full_domain_of_variable( i ).end() )
 						{
 							std::swap( model.variables[i]._current_value, model.variables[j]._current_value );
 						}
@@ -246,12 +249,12 @@ namespace ghost
 				for( int i = 0 ; i < nb_var ; ++i )
 					if( variables_index_A[i] != variables_index_B[i]
 					    && model.variables[ variables_index_A[i] ].get_value() != model.variables[ variables_index_B[i] ].get_value()
-					    && std::find( model.variables[ variables_index_B[i] ].get_full_domain().begin(),
-					                  model.variables[ variables_index_B[i] ].get_full_domain().end(),
-					                  model.variables[ variables_index_A[i] ].get_value() ) != model.variables[ variables_index_B[i] ].get_full_domain().end()
-					    && std::find( model.variables[ variables_index_A[i] ].get_full_domain().begin(),
-					                  model.variables[ variables_index_A[i] ].get_full_domain().end(),
-					                  model.variables[ variables_index_B[i] ].get_value() ) != model.variables[ variables_index_A[i] ].get_full_domain().end() )
+					    && std::find( model.get_full_domain_of_variable( variables_index_B[i] ).begin(),
+					                  model.get_full_domain_of_variable( variables_index_B[i] ).end(),
+					                  model.variables[ variables_index_A[i] ].get_value() ) != model.get_full_domain_of_variable( variables_index_B[i] ).end()
+					    && std::find( model.get_full_domain_of_variable( variables_index_A[i] ).begin(),
+					                  model.get_full_domain_of_variable( variables_index_A[i] ).end(),
+					                  model.variables[ variables_index_B[i] ].get_value() ) != model.get_full_domain_of_variable( variables_index_A[i] ).end() )
 						std::swap( model.variables[ variables_index_A[i] ]._current_value, model.variables[ variables_index_B[i] ]._current_value );
 			}
 		}
@@ -311,8 +314,7 @@ namespace ghost
 			}
 
 			// Reset variable costs and recompute them
-			error_projection_algorithm->compute_variable_errors( model.variables,
-			                                                     model.constraints,
+			error_projection_algorithm->compute_variable_errors( model,
 			                                                     data );
 		}
 
@@ -381,12 +383,12 @@ namespace ghost
 				for( int variable_id = 0 ; variable_id < data.number_variables - 1 ; ++variable_id )
 					for( int variable_swap = variable_id + 1 ; variable_swap < data.number_variables ; ++variable_swap )
 						if( model.variables[ variable_id ].get_value() != model.variables[ variable_swap ].get_value()
-						    && std::find( model.variables[ variable_id ].get_full_domain().begin(),
-						                  model.variables[ variable_id ].get_full_domain().end(),
-						                  model.variables[ variable_swap ].get_value() ) != model.variables[ variable_id ].get_full_domain().end()
-						    && std::find( model.variables[ variable_swap ].get_full_domain().begin(),
-						                  model.variables[ variable_swap ].get_full_domain().end(),
-						                  model.variables[ variable_id ].get_value() ) != model.variables[ variable_swap ].get_full_domain().end() )
+						    && std::find( model.get_full_domain_of_variable( variable_id ).begin(),
+						                  model.get_full_domain_of_variable( variable_id ).end(),
+						                  model.variables[ variable_swap ].get_value() ) != model.get_full_domain_of_variable( variable_id ).end()
+						    && std::find( model.get_full_domain_of_variable( variable_swap ).begin(),
+						                  model.get_full_domain_of_variable( variable_swap ).end(),
+						                  model.variables[ variable_id ].get_value() ) != model.get_full_domain_of_variable( variable_swap ).end() )
 						{
 							error = data.current_sat_error;
 							std::vector<bool> constraint_checked( data.number_constraints, false );
@@ -416,7 +418,7 @@ namespace ghost
 			else
 			{			
 				for( int variable_id = 0 ; variable_id < data.number_variables ; ++variable_id )
-					for( int value : model.variables[ variable_id ]._domain )
+					for( int value : model.get_full_domain_of_variable( variable_id ) )
 						if( value != model.variables[ variable_id ].get_value() )
 						{						
 							error = data.current_sat_error;
@@ -456,7 +458,7 @@ namespace ghost
 					auto delta = delta_errors.at( new_value )[ delta_index++ ];
 					model.constraints[ constraint_id ]->_current_error += delta;
 					
-					error_projection_algorithm->update_variable_errors( model.variables,
+					error_projection_algorithm->update_variable_errors( model,
 					                                                    model.constraints[ constraint_id ],
 					                                                    data,
 					                                                    delta );
@@ -479,7 +481,7 @@ namespace ghost
 					auto delta = delta_errors.at( new_value )[ delta_index++ ];
 					model.constraints[ constraint_id ]->_current_error += delta;
 
-					error_projection_algorithm->update_variable_errors( model.variables,
+					error_projection_algorithm->update_variable_errors( model,
 					                                                    model.constraints[ constraint_id ],
 					                                                    data,
 					                                                    delta );
@@ -496,7 +498,7 @@ namespace ghost
 						auto delta = delta_errors.at( new_value )[ delta_index++ ];
 						model.constraints[ constraint_id ]->_current_error += delta;
 
-						error_projection_algorithm->update_variable_errors( model.variables,
+						error_projection_algorithm->update_variable_errors( model,
 						                                                    model.constraints[ constraint_id ],
 						                                                    data,
 						                                                    delta );
@@ -828,7 +830,7 @@ namespace ghost
 					variable_candidates.erase( ref );
 				
 				// So far, we consider full domains only.
-				auto domain_to_explore = model.variables[ variable_to_change ].get_full_domain();
+				auto domain_to_explore = model.get_full_domain_of_variable( variable_to_change );
 				// Remove the current value
 				domain_to_explore.erase( std::find( domain_to_explore.begin(), domain_to_explore.end(), model.variables[ variable_to_change ].get_value() ) );
 				std::map<int, std::vector<double>> delta_errors;
@@ -855,9 +857,9 @@ namespace ghost
 						if( variable_id != variable_to_change
 						    && model.variables[ variable_id ].get_value() != model.variables[ variable_to_change ].get_value()
 						    && std::find( domain_to_explore.begin(), domain_to_explore.end(), model.variables[ variable_id ].get_value() ) != domain_to_explore.end()
-						    && std::find( model.variables[ variable_id ].get_full_domain().begin(),
-						                  model.variables[ variable_id ].get_full_domain().end(),
-						                  model.variables[ variable_to_change ].get_value() ) != model.variables[ variable_id ].get_full_domain().end() )
+						    && std::find( model.get_full_domain_of_variable( variable_id ).begin(),
+						                  model.get_full_domain_of_variable( variable_id ).end(),
+						                  model.variables[ variable_to_change ].get_value() ) != model.get_full_domain_of_variable( variable_id ).end() )
 						{
 							std::vector<bool> constraint_checked( data.number_constraints, false );
 							int current_value = model.variables[ variable_to_change ].get_value();

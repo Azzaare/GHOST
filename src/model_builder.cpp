@@ -60,8 +60,6 @@ Model ModelBuilder::build_model()
 
 	std::cout << "Number of domains created: " << _created_domains.size() << "\n";
 	
-	//TODO how to combine variables and domains declaration?
-
 	// Auxiliary data may be needed by the constraints and the objective function,
 	// so it must be defined before them.
 	declare_auxiliary_data();

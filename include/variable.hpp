@@ -39,6 +39,9 @@
 
 namespace ghost
 {
+	class ModelBuilder;
+	class Constraint;
+
 	/*!
 	 * This class encodes variables of the model. Users cannot write classes inheriting 
 	 * from ghost::Variable.
@@ -55,7 +58,6 @@ namespace ghost
 	 */
 	class Variable final
 	{
-		friend class SearchUnit; // TODO: still necessary?
 		friend class ModelBuilder;
 		friend class Constraint;
 
@@ -65,7 +67,7 @@ namespace ghost
 		std::vector<int>* _domain; // Pointer to the domain of the variable (located in the model).
 		
 		inline static int _count = 0;
-		
+				
 		struct valueException : std::exception
 		{
 			int value;
@@ -116,13 +118,42 @@ namespace ghost
 		//           const std::string& name );
 
 	public:
+		// TODO Make these two constructors private
+		/*!
+		 * Constructor with the domain as input.
+		 *
+		 * \param value the initial value of the variable.
+		 * \param domain a pointer to the domain of the variable.
+		 * \param name a const reference of a string to give a name to the variable. If no names are
+		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
+		 */
+		Variable( int	value,
+		          std::vector<int>* domain,
+		          const std::string& name = std::string() );
+
+		//! Default constructor (for instance, for vector initialization.)
+		Variable() = default;
+
+		//! Default copy contructor.
+		Variable( const Variable& other ) = default;
+		//! Default move contructor.
+		Variable( Variable&& other ) = default;
+		
+		//! Copy assignment operator disabled.
+		Variable& operator=( const Variable& other ) = default;
+		//! Move assignment operator disabled.
+		Variable& operator=( Variable&& other ) = default;
+		
+		//! Default virtual destructor.
+		virtual ~Variable() = default;
+				
 		/*!
 		 * Inline method to get the current value of the variable.
 		 *
 		 * \return An integer corresponding to the variable value.
 		 */
 		inline int get_value() const { return _current_value; }
-
+		
 		/*!
 		 * Set the value of the variable.
 		 *
@@ -157,22 +188,5 @@ namespace ghost
 				<< "\nDomain: " << domain
 				<< "\n--------";
 		}
-
-		//public:
-		// TODO: Make them private
-		//! Default constructor
-		Variable() = default;
-		// TODO Big 5. Pointer management.
-
-		/*!
-		 * Constructor with the domain as input.
-		 *
-		 * \param value the initial value of the variable.
-		 * \param name a const reference of a string to give a name to the variable. If no names are
-		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
-		 */
-		Variable( int	value,
-		          std::vector<int>* domain,
-		          const std::string& name = std::string() );
 	};
 }

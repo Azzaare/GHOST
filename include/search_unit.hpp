@@ -211,7 +211,6 @@ namespace ghost
 
 			for( int i = 0 ; i < nb_var ; ++i )
 				model.set_random_value_to_variable( variables_index[ i ], rng );
-				//model.variables[ variables_index[ i ] ].pick_random_value( rng );
 		}
 
 		// Sample an configuration for permutation problems

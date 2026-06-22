@@ -165,9 +165,9 @@ namespace ghost
 			do
 			{
 				if( model.permutation_problem )
-					random_permutations();
+					random_permutations( options.number_variables_to_reset );
 				else
-					monte_carlo_sampling();
+					monte_carlo_sampling( options.number_variables_to_reset );
 
 				model.auxiliary_data->update();
 				current_sat_error = 0.0;

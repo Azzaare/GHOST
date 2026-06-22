@@ -129,7 +129,7 @@ void ModelBuilder::create_variable( std::vector< int > domain, int index )
 		_created_domains[ key ] = dom_index;
 	}
 
-	variables.emplace_back( domain[index], &(domains[domains.size()-1]) ); //&(*domains.rend())
+	variables.push_back( ghost::Variable( domain[index], &(domains[ _domain_of_variable[ var_id ] ]) ) ); 
 }
 
 void ModelBuilder::create_variable( int starting_value, std::size_t size, int index )

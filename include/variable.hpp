@@ -76,50 +76,7 @@ namespace ghost
 			const char* what() const noexcept { return message.c_str(); }
 		};
 
-		// /*!
-		//  * Constructor building a contiguous domain with all intergers from starting_value to 
-		//  * starting_value + size-1.
-		//  *
-		//  * \param starting_value an integer representing the first value of the domain.
-		//  * The creating domain will then be the interval [starting_value, starting_value + size - 1].
-		//  * \param size a size_t corresponding to the size of the domain to create.
-		//  * \param index the position in the domain corresponding to the variable initial value.
-		//  * For instance with the domain [1, 2, 5, 7, 8], if index equals to 3 then the variable 
-		//  * initial value is 7. By default, the index is zero.
-		//  * \param name a const reference of a string to give a name to the variable. If no names are
-		//  * given, GHOST will automatically rename variables by "vx", with x the variable ID.
-		//  */
-		// Variable( int starting_value,
-		//           std::size_t size,
-		//           int	index = 0,
-		//           const std::string& name = std::string() );
-
-		// /*!
-		//  * Equivalent to the constructor Variable(domain, index, name).
-		//  *
-		//  * It simply calls Variable(0, name).
-		//  *
-		//  * \param name a const reference of a string to give a name to the variable.
-		//  */
-		// Variable( const std::string& name );
-
-		// /*!
-		//  * Equivalent to the constructor Variable(starting_value, size, index, name).
-		//  *
-		//  * It simply calls Variable(starting_value, size, 0, name).
-		//  *
-		//  * \param starting_value an integer representing the first value of the domain.
-		//  * The creating domain will then be the interval [starting_value, starting_value + size - 1].
-		//  * \param size a size_t corresponding to the size of the domain to create.
-		//  * \param name a const reference of a string to give a name to the variable.
-		//  */
-		// Variable( int starting_value,
-		//           std::size_t size,
-		//           const std::string& name );
-
-	public:
-		// TODO Make these two constructors private
-		/*!
+		/*
 		 * Constructor with the domain as input.
 		 *
 		 * \param value the initial value of the variable.
@@ -131,9 +88,10 @@ namespace ghost
 		          std::vector<int>* domain,
 		          const std::string& name = std::string() );
 
-		//! Default constructor (for instance, for vector initialization.)
+		// Default constructor (for instance, for vector initialization.)
 		Variable() = default;
 
+	public:
 		//! Default copy contructor.
 		Variable( const Variable& other ) = default;
 		//! Default move contructor.

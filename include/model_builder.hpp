@@ -95,16 +95,18 @@ namespace ghost
 		 * The implementation should be like\n
 		 * void UserBuilder::declare_variables()\n
 		 * {\n
-		 *   variables.emplace_back(parameters_of_Variable_constructor);\n
-		 *   variables.emplace_back(parameters_of_Variable_constructor);\n
+		 *   create_variable({1,3,5}); //with {1,3,5} the variable domain\n
+		 *   create_variable({1,2,3,4}, 1); //the value at index 1, i.e. `2`, will be assigned to the variable\n
 		 *   ...\n
-		 *   variables.emplace_back(parameters_of_Variable_constructor);\n
+		 *   create_variable(10, 5); //the domain will be {10,11,12,13,14}\n
+		 *   create_variable(10, 5, 2); //the value 12 will assigned to the variable\n
 		 * }\n
 		 *
-		 * Alternatively, users can declare many variables at once:\n
+		 * Alternatively, if a group of variables share the same domain, users can declare them at once:\n
 		 * void UserBuilder::declare_variables()\n
 		 * {\n
-		 *   create_n_variables( number_of_variables );\n
+		 *   create_n_variables( 5, {1,3,5} ); //create 5 variables with domain {1,3,5}\n
+		 *   create_n_variables( 3, 7, 2 ); //create 3 variables with domain {7,8}\n
 		 * }
 		 */
 		virtual void declare_variables() = 0;
@@ -151,28 +153,32 @@ namespace ghost
 		/*!
 		 * Method to create one variable with a domain given as input.
 		 *
-		 * \param domain the domain to copy and give to each variable. 
+		 * \param domain the domain to copy and give to each variable. \warning Domains are not sorted. thus, domains with the same elements in different orders would be considered to be different.
+		 * \param name a const reference of a string to give a name to the variable. If no names are
+		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
 		 * \param index an optional parameter to make variables starting with the index-th value
 		 * of the domain. Set to 0 by default.
 		 */
-		void create_variable( std::vector< int > domain, int index = 0 );
+		void create_variable( std::vector< int > domain, const std::string& name = std::string(), int index = 0 );
 
 		/*!
 		 * Method to create one variable with a domain containing all integers
-		 * in [starting_value, starting_value + size - 1].
+		 * in [starting_value, starting_value + size - 1], in ascending order.
 		 *
 		 * \param starting_value the first value of each domain.
 		 * \param size the size of each domain.
+		 * \param name a const reference of a string to give a name to the variable. If no names are
+		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
 		 * \param index an optional parameter to make variables starting with the index-th value
 		 * of the domain. Set to 0 by default.
 		 */
-		void create_variable( int starting_value, std::size_t size, int index = 0 );
+		void create_variable( int starting_value, std::size_t size, const std::string& name = std::string(), int index = 0 );
 
 		/*!
 		 * Method to create 'number' identical variables, all with a domain given as input.
 		 *
 		 * \param number the number of variables to create.
-		 * \param domain the domain to copy and give to each variable. 
+		 * \param domain the domain to copy and give to each variable. \warning Domains are not sorted. thus, domains with the same elements in different orders would be considered to be different.
 		 * \param index an optional parameter to make variables starting with the index-th value
 		 * of the domain. Set to 0 by default.
 		 */
@@ -180,7 +186,7 @@ namespace ghost
 
 		/*!
 		 * Method to create 'number' identical variables, all with a domain containing all integers
-		 * in [starting_value, starting_value + size - 1].
+		 * in [starting_value, starting_value + size - 1], in ascending order.
 		 *
 		 * \param number the number of variables to create.
 		 * \param starting_value the first value of each domain.

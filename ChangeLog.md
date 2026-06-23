@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file, since GHOST 2.0.0.
 
+## [3.5.0] - 2026-06-23
+- Greatly improve memory footprint by removing domains from `Variable`. This implied a change in the `ModelBuilder` interface. CODE IN `ModelBuilder` CHILD CLASSES PRIOR TO THIS 3.5 VERSION MAY BECOME INCOMPATIBLE.
+
 ## [3.4.0] - 2026-05-13
 - Rollback to the 3.2.0 version. The switch mechanism between optimization space and violation space seems inefficient, and makes the solver slower.
 

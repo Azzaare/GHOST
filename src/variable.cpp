@@ -34,28 +34,11 @@
 
 using ghost::Variable;
 
-Variable::Variable( int value,
-                    std::vector<int>* domain,
+Variable::Variable( std::vector<int>* domain,
+                    int index,
                     const std::string& name )
 	: _id( _count++ ),
 	  _name( name ),
-	  _current_value( value ),
+	  _current_value( domain->at(index) ),
 	  _domain( domain )
 { }
-
-// Variable::Variable( int starting_value, std::size_t size, int index, const std::string& name )
-// 	: _domain( std::vector<int>( size ) ),
-// 	  _id( 0 ),
-// 	  _name( name ),
-// 	  _min_value( starting_value ),
-// 	  _max_value( starting_value + static_cast<int>( size ) - 1 )
-// {
-// 	std::iota( _domain.begin(), _domain.end(), starting_value );
-// 	_current_value = _domain.at( index );
-// }
-
-// Variable::Variable( int starting_value,
-//                     std::size_t size,
-//                     const std::string& name )
-// 	: Variable( starting_value, size, 0, name )
-// { }

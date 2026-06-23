@@ -30,8 +30,6 @@
 #include <numeric>
 #include <sstream>
 
-#include <iostream>
-
 #include "model_builder.hpp"
 
 using ghost::ModelBuilder;
@@ -57,8 +55,6 @@ Model ModelBuilder::build_model()
 	for( int variable_id = 0 ; variable_id < static_cast<int>( variables.size() ) ; ++variable_id )
 		if( variables[ variable_id ]._name.empty() )
 			variables[ variable_id ]._name = "v" + std::to_string( variable_id );
-
-	std::cout << "Number of domains created: " << _created_domains.size() << "\n";
 	
 	// Auxiliary data may be needed by the constraints and the objective function,
 	// so it must be defined before them.
@@ -113,9 +109,8 @@ std::string ModelBuilder::make_key( const std::vector<int>& vec)
 	return stream.str();
 }
 
-void ModelBuilder::create_variable( std::vector< int > domain, int index )
+void ModelBuilder::create_variable( std::vector< int > domain, const std::string& name, int index )
 {
-	std::sort( domain.begin(), domain.end() );
 	int var_id = static_cast<int>( variables.size() );
 
 	std::string key = make_key( domain );
@@ -129,27 +124,27 @@ void ModelBuilder::create_variable( std::vector< int > domain, int index )
 		_created_domains[ key ] = dom_index;
 	}
 
-	variables.push_back( ghost::Variable( domain[index], &(domains[ _domain_of_variable[ var_id ] ]) ) ); 
+	variables.push_back( ghost::Variable( &(domains[ _domain_of_variable[ var_id ] ]), index, name ) ); 
 }
 
-void ModelBuilder::create_variable( int starting_value, std::size_t size, int index )
+void ModelBuilder::create_variable( int starting_value, std::size_t size, const std::string& name, int index )
 {
 	std::vector<int> dom( size );
 	std::iota( dom.begin(), dom.end(), starting_value );
 
-	create_variable( dom, index );
+	create_variable( dom, name, index );
 }
 
 void ModelBuilder::create_n_variables( int number, const std::vector<int>& domain, int index )
 {
 	for( int i = 0 ; i < number ; ++i )
-		create_variable( domain, index );
+		create_variable( domain, std::string(), index );
 }
 
 void ModelBuilder::create_n_variables( int number, int starting_value, std::size_t size, int index )
 {
 	for( int i = 0 ; i < number ; ++i )
-		create_variable( starting_value, size, index );
+		create_variable( starting_value, size, std::string(), index );
 }
 
 void ModelBuilder::declare_constraints()

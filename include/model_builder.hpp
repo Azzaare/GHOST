@@ -67,7 +67,8 @@ namespace ghost
 		Model build_model();
 		std::map<std::string, int> _created_domains; // keys are sorted_values_in_domain, values are the index in the domain vector
 		std::map<int, int> _domain_of_variable; // map<var id, domain index>
-
+		int _number_variables_created;
+		
 		std::string make_key( const std::vector<int>& );
 		
 	protected:

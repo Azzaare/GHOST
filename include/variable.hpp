@@ -64,8 +64,6 @@ namespace ghost
 		std::string _name;	// String to give a name to the variable, helpful to debug/trace.
 		int	_current_value;	// Current value assigned to the variable.
 		std::vector<int>* _domain; // Pointer to the domain of the variable (located in the model).
-		
-		inline static int _count = 0;
 				
 		struct valueException : std::exception
 		{
@@ -78,12 +76,14 @@ namespace ghost
 		/*
 		 * Constructor with the domain as input.
 		 *
+		 * \param id the ID of the variable.
 		 * \param domain a pointer to the domain of the variable.
 		 * \param index the position in the domain corresponding to the variable initial value. For instance with the domain [1, 2, 5, 7, 8], if index equals to 3 then the variable initial value is 7. By default, the index is zero. 
 		 * \param name a const reference of a string to give a name to the variable. If no names are
 		 * given, GHOST will automatically rename variables by "vx", with x the variable ID.
 		 */
-		Variable( std::vector<int>* domain,
+		Variable( int id,
+		          std::vector<int>* domain,
 		          int	index = 0,
 		          const std::string& name = std::string() );
 

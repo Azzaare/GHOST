@@ -34,10 +34,11 @@
 
 using ghost::Variable;
 
-Variable::Variable( std::vector<int>* domain,
+Variable::Variable( int id,
+                    std::vector<int>* domain,
                     int index,
                     const std::string& name )
-	: _id( _count++ ),
+	: _id( id ),
 	  _name( name ),
 	  _current_value( domain->at(index) ),
 	  _domain( domain )

@@ -42,12 +42,12 @@ ModelBuilder::ModelBuilder( bool permutation_problem )
 Model ModelBuilder::build_model()
 {
 	// Necessary reinitializations, if build_model() is called more than once during the program execution.
+	_number_variables_created = 0;
 	variables.clear();
 	domains.clear();
 	_created_domains.clear();
 	_domain_of_variable.clear();
 	constraints.clear();
-	ghost::Variable::_count = 0; 
 
 	declare_variables();
 
@@ -124,7 +124,10 @@ void ModelBuilder::create_variable( std::vector< int > domain, const std::string
 		_created_domains[ key ] = dom_index;
 	}
 
-	variables.push_back( ghost::Variable( &(domains[ _domain_of_variable[ var_id ] ]), index, name ) ); 
+	variables.push_back( ghost::Variable( _number_variables_created++,
+	                                      &(domains[ _domain_of_variable[ var_id ] ]),
+	                                      index,
+	                                      name ) ); 
 }
 
 void ModelBuilder::create_variable( int starting_value, std::size_t size, const std::string& name, int index )

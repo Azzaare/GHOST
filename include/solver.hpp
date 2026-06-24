@@ -121,7 +121,6 @@ namespace ghost
 		ModelBuilderType _model_builder; // Factory building the model
 
 		int _number_variables; // Size of the vector of variables.
-		int _number_constraints; // Size of the vector of constraints.
 
 		double _best_sat_error;
 		double _best_opt_cost;
@@ -442,9 +441,7 @@ namespace ghost
 			/*****************
 			* Initialization *
 			******************/
-			// Only to get the number of variables and constraints
-			_model_builder.declare_variables();
-			_number_variables = _model_builder.get_number_variables();
+			_number_variables = _model_builder.fake_building_and_count_variables();
 
 			_options = options;
 

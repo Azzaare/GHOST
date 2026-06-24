@@ -48,6 +48,7 @@ Model ModelBuilder::build_model()
 	_created_domains.clear();
 	_domain_of_variable.clear();
 	constraints.clear();
+	objective = nullptr;
 
 	declare_variables();
 
@@ -55,7 +56,7 @@ Model ModelBuilder::build_model()
 	for( int variable_id = 0 ; variable_id < static_cast<int>( variables.size() ) ; ++variable_id )
 		if( variables[ variable_id ]._name.empty() )
 			variables[ variable_id ]._name = "v" + std::to_string( variable_id );
-	
+
 	// Auxiliary data may be needed by the constraints and the objective function,
 	// so it must be defined before them.
 	declare_auxiliary_data();
@@ -64,7 +65,7 @@ Model ModelBuilder::build_model()
 
 	if( constraints.empty() )
 		constraints.emplace_back( std::make_shared<PureOptimization>( variables ) );
-	
+
 	// Internal data structure initialization
 	// Set the id of each constraint object to be their index in the _constraints vector
 	for( int constraint_id = 0 ; constraint_id < static_cast<int>( constraints.size() ) ; ++constraint_id )
@@ -101,6 +102,26 @@ Model ModelBuilder::build_model()
 	              permutation_problem );
 }
 
+int ModelBuilder::fake_building_and_count_variables()
+{
+	_number_variables_created = 0;
+	variables.clear();
+	domains.clear();
+	_created_domains.clear();
+	_domain_of_variable.clear();
+
+	declare_variables();
+
+	int nb_vars = _number_variables_created;
+	_number_variables_created = 0;
+	variables.clear();
+	domains.clear();
+	_created_domains.clear();
+	_domain_of_variable.clear();
+
+	return nb_vars;
+}
+
 std::string ModelBuilder::make_key( const std::vector<int>& vec)
 {
 	std::stringstream stream;
@@ -127,7 +148,7 @@ void ModelBuilder::create_variable( std::vector< int > domain, const std::string
 	variables.push_back( ghost::Variable( _number_variables_created++,
 	                                      &(domains[ _domain_of_variable[ var_id ] ]),
 	                                      index,
-	                                      name ) ); 
+	                                      name ) );
 }
 
 void ModelBuilder::create_variable( int starting_value, std::size_t size, const std::string& name, int index )

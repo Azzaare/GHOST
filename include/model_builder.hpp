@@ -70,6 +70,7 @@ namespace ghost
 		int _number_variables_created;
 		
 		std::string make_key( const std::vector<int>& );
+		int fake_building_and_count_variables(); // safely call declare_variables to generate variables and return their number, then erase them
 		
 	protected:
 		std::vector<Variable> variables; //!< The global vector containing all variables of the problem instance.

@@ -239,7 +239,7 @@ namespace ghost
 		 * won't be taken into account by the solver. 
 		 * \param best_cost a double representing the best optimization cost found by the solver
 		 * so far. This helps users be sure that their post-processing leads to actual improvements.
-		 * \return The new error after post-processing.
+		 * \return The new optimization cost after post-processing.
 		 */
 		virtual double expert_postprocess( const std::vector<Variable*>& variables,
 		                                   double best_cost ) const;

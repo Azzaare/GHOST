@@ -135,7 +135,7 @@ void ModelBuilder::create_variable( std::vector< int > domain, const std::string
 	int var_id = static_cast<int>( variables.size() );
 
 	std::string key = make_key( domain );
-	if( _created_domains.contains( key ) )
+	if( _created_domains.find( key ) != _created_domains.end() )
 		_domain_of_variable[ var_id ] = _created_domains[ key ] ;
 	else
 	{

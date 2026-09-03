@@ -41,14 +41,13 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # compilation options
-if(WIN32)
+if(MSVC)
 	if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 		set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od")
 		add_definitions(-DGHOST_DEBUG)
 	else()
 		set(CMAKE_CXX_FLAGS_RELEASE "/O2")
 	endif()
-	set(CMAKE_INSTALL_PREFIX "C:/Users/Public/Documents/ghost")
 else()
 	if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 		set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer -fsanitize=address,undefined,leak -static-libasan")
@@ -61,21 +60,25 @@ endif()
 # add 'd' at the end of the library name compiled in Debug mode
 set(CMAKE_DEBUG_POSTFIX d)
 
-if(WIN32)
+if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
 endif()
 
 # cmake --install on visual studio
-if("${WIN32}")
+if(MSVC)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
 endif()
 
 # Options
 option(NO_ASAN "Disable fsanitizer" OFF)
 if(NO_ASAN)
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+	if(MSVC)
+		set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od")
+	else()
+		set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+	endif()
 endif()
 
 # add the binary tree to the search path for include files so that we will find headers

@@ -42,8 +42,6 @@ install(FILES include/ghost_c_api.h
     DESTINATION include
 )
 
-# Enable testing
-enable_testing()
-
-# Add the tests directory
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

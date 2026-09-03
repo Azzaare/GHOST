@@ -1,0 +1,21 @@
+name: C API
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build-c-api -DCMAKE_BUILD_TYPE=Release -DNO_ASAN=ON
+      - name: Build
+        run: cmake --build build-c-api --config Release --parallel 4
+      - name: Test C ABI
+        run: ctest --test-dir build-c-api -C Release --output-on-failure

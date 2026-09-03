@@ -18,5 +18,5 @@ add_test(NAME test_ghost_c_api COMMAND test_ghost_c_api)
 # Set the output directory for the test executable
 set_target_properties(test_ghost_c_api
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/capi"
 )

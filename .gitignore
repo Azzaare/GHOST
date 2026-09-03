@@ -12,6 +12,7 @@ doc/.zcache
 build32
 build64
 build/*
+build-jump-wrapper/
 
 # CMake test builds
 tests/build*

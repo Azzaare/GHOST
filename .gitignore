@@ -13,6 +13,7 @@ build32
 build64
 build/*
 build-jump-wrapper/
+build-capi-only-check/
 
 # CMake test builds
 tests/build*

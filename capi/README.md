@@ -22,3 +22,12 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
+
+Binary distributions that only need the stable C ABI can avoid installing the
+C++ library and headers:
+
+```sh
+cmake -S . -B build -DGHOST_C_API_ONLY=ON -DNO_ASAN=ON
+cmake --build build --config Release
+cmake --install build --prefix /path/to/prefix
+```

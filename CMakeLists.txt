@@ -42,6 +42,7 @@ endif()
 
 # compilation options
 if(MSVC)
+	add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
 	if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 		set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od")
 		add_definitions(-DGHOST_DEBUG)
@@ -73,6 +74,7 @@ endif()
 
 # Options
 option(NO_ASAN "Disable fsanitizer" OFF)
+option(GHOST_C_API_ONLY "Build and install only the C ABI wrapper" OFF)
 if(NO_ASAN)
 	if(MSVC)
 		set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od")
@@ -182,27 +184,31 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
 		add_library(ghost_android_x86_64 SHARED	"${toAddInLibs}")
 	endif()
 else()
-	add_library(ghost SHARED "${toAddInLibs}")
-	add_library(ghost_static STATIC "${toAddInLibs}")
+	if(NOT GHOST_C_API_ONLY)
+		add_library(ghost SHARED "${toAddInLibs}")
 
-	target_include_directories(ghost PUBLIC
+		target_include_directories(ghost PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/thirdparty/>
   $<INSTALL_INTERFACE:include/ghost/thirdparty>)
+	endif()
+	add_library(ghost_static STATIC "${toAddInLibs}")
 endif()
 
 # add the install targets
 if(NOT("${CMAKE_SYSTEM_NAME}" STREQUAL "Android"))
-	if(CMAKE_SIZEOF_VOID_P EQUAL 4) # 32bits
-		install (TARGETS ghost DESTINATION "lib32")
-		install (TARGETS ghost_static DESTINATION "lib32")
-	else() # 64bits
-		install (TARGETS ghost DESTINATION "lib")
-		install (TARGETS ghost_static DESTINATION "lib")
+	if(NOT GHOST_C_API_ONLY)
+		if(CMAKE_SIZEOF_VOID_P EQUAL 4) # 32bits
+			install (TARGETS ghost DESTINATION "lib32")
+			install (TARGETS ghost_static DESTINATION "lib32")
+		else() # 64bits
+			install (TARGETS ghost DESTINATION "lib")
+			install (TARGETS ghost_static DESTINATION "lib")
+		endif()
+		install (FILES ${libHeadersList} DESTINATION "include/ghost")
+		install (FILES ${libHeadersAlgorithmsList} DESTINATION "include/ghost/algorithms")
+		install (FILES ${libHeadersGlobalConstraintsList} DESTINATION "include/ghost/global_constraints")
+		install (FILES ${libExternalHeadersList} DESTINATION "include/ghost/thirdparty")
 	endif()
-	install (FILES ${libHeadersList} DESTINATION "include/ghost")
-	install (FILES ${libHeadersAlgorithmsList} DESTINATION "include/ghost/algorithms")
-	install (FILES ${libHeadersGlobalConstraintsList} DESTINATION "include/ghost/global_constraints")
-	install (FILES ${libExternalHeadersList} DESTINATION "include/ghost/thirdparty")
 endif()
 
 # Add the C API subdirectory

@@ -16,6 +16,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -28,13 +29,15 @@ struct VariableSpec {
     int start_index = 0;
 };
 
-enum class ConstraintKind { linear_eq, linear_le, linear_ge, all_different };
+enum class ConstraintKind { linear_eq, linear_le, linear_ge, all_different, callback };
 
 struct ConstraintSpec {
     ConstraintKind kind;
     std::vector<int> variable_ids;
     std::vector<double> coefficients;
     double rhs = 0.0;
+    GhostEvaluationCallback callback = nullptr;
+    void *userdata = nullptr;
 };
 
 struct ObjectiveSpec {
@@ -43,6 +46,55 @@ struct ObjectiveSpec {
     std::vector<int> variable_ids;
     std::vector<double> coefficients;
     double constant = 0.0;
+    GhostEvaluationCallback callback = nullptr;
+    void *userdata = nullptr;
+};
+
+struct CallbackEvaluation {
+    GhostEvaluationCallback callback;
+    void *userdata;
+    mutable std::vector<int> buffer;
+    CallbackEvaluation(GhostEvaluationCallback fn, void *data, size_t count)
+        : callback(fn), userdata(data), buffer(count) {}
+    double evaluate(const std::vector<ghost::Variable *> &variables, bool constraint) const {
+        for (size_t i = 0; i < variables.size(); ++i) buffer[i] = variables[i]->get_value();
+        double result = std::numeric_limits<double>::quiet_NaN();
+        if (callback(buffer.data(), buffer.size(), &result, userdata) != GHOST_SUCCESS)
+            throw std::runtime_error("The evaluation callback reported a failure.");
+        if (!std::isfinite(result) || (constraint && result < 0.0))
+            throw std::runtime_error("Callback values must be finite; constraint errors must be nonnegative.");
+        return result;
+    }
+};
+
+struct CallbackConstraint final : ghost::Constraint {
+    CallbackEvaluation evaluation;
+    explicit CallbackConstraint(const ConstraintSpec &spec)
+        : ghost::Constraint(spec.variable_ids),
+          evaluation(spec.callback, spec.userdata, spec.variable_ids.size()) {}
+    double required_error(const std::vector<ghost::Variable *> &variables) const override {
+        return evaluation.evaluate(variables, true);
+    }
+};
+
+struct CallbackMinimize final : ghost::Minimize {
+    CallbackEvaluation evaluation;
+    explicit CallbackMinimize(const ObjectiveSpec &spec)
+        : ghost::Minimize(spec.variable_ids, "C API callback minimization"),
+          evaluation(spec.callback, spec.userdata, spec.variable_ids.size()) {}
+    double required_cost(const std::vector<ghost::Variable *> &variables) const override {
+        return evaluation.evaluate(variables, false);
+    }
+};
+
+struct CallbackMaximize final : ghost::Maximize {
+    CallbackEvaluation evaluation;
+    explicit CallbackMaximize(const ObjectiveSpec &spec)
+        : ghost::Maximize(spec.variable_ids, "C API callback maximization"),
+          evaluation(spec.callback, spec.userdata, spec.variable_ids.size()) {}
+    double required_cost(const std::vector<ghost::Variable *> &variables) const override {
+        return evaluation.evaluate(variables, false);
+    }
 };
 
 struct LinearMinimize final : ghost::Minimize {
@@ -156,6 +208,9 @@ public:
                 constraints.emplace_back(
                     std::make_shared<AllDifferent>(spec.variable_ids));
                 break;
+            case ConstraintKind::callback:
+                constraints.emplace_back(std::make_shared<CallbackConstraint>(spec));
+                break;
             }
         }
     }
@@ -163,6 +218,11 @@ public:
     void declare_objective() override {
         if (!objective_spec_.present) {
             ghost::ModelBuilder::declare_objective();
+        } else if (objective_spec_.callback) {
+            if (objective_spec_.maximize)
+                objective = std::make_shared<CallbackMaximize>(objective_spec_);
+            else
+                objective = std::make_shared<CallbackMinimize>(objective_spec_);
         } else if (objective_spec_.maximize) {
             objective = std::make_shared<LinearMaximize>(
                 objective_spec_.variable_ids,
@@ -286,6 +346,8 @@ GhostStatus set_option(GhostOptionsHandle handle, Setter &&setter) {
 } // namespace
 
 extern "C" {
+
+unsigned ghost_c_api_version(void) { return 0x00010000u; }
 
 GhostSessionHandle ghost_create_session(bool permutation_problem) {
     try {
@@ -463,6 +525,8 @@ GhostStatus ghost_set_linear_objective(
         return GHOST_ERROR_INVALID_ARG;
     }
     try {
+        handle->objective.callback = nullptr;
+        handle->objective.userdata = nullptr;
         handle->objective.present = true;
         handle->objective.maximize = maximize;
         handle->objective.variable_ids.assign(variable_ids, variable_ids + number_variables);
@@ -474,6 +538,43 @@ GhostStatus ghost_set_linear_objective(
         handle->last_error = "Unable to allocate the objective.";
         return GHOST_ERROR_MEMORY;
     }
+}
+
+int ghost_add_callback_constraint(GhostSessionHandle handle, const int *ids,
+                                 size_t count, GhostEvaluationCallback callback, void *userdata) {
+    if (!handle) return GHOST_ERROR_NULL_HANDLE;
+    if (!callback || !validate_scope(handle, ids, count, nullptr, false)) {
+        handle->last_error = "A callback and valid non-empty scope are required.";
+        return GHOST_ERROR_INVALID_ARG;
+    }
+    try {
+        ConstraintSpec spec;
+        spec.kind = ConstraintKind::callback;
+        spec.variable_ids.assign(ids, ids + count);
+        spec.callback = callback; spec.userdata = userdata;
+        handle->constraints.emplace_back(std::move(spec));
+        clear_result(handle);
+        return static_cast<int>(handle->constraints.size() - 1);
+    } catch (const std::bad_alloc &) { return GHOST_ERROR_MEMORY; }
+}
+
+GhostStatus ghost_set_callback_objective(GhostSessionHandle handle, bool maximize,
+                                       const int *ids, size_t count,
+                                       GhostEvaluationCallback callback, void *userdata) {
+    if (!handle) return GHOST_ERROR_NULL_HANDLE;
+    if (!callback || !validate_scope(handle, ids, count, nullptr, false)) {
+        handle->last_error = "A callback and valid non-empty scope are required.";
+        return GHOST_ERROR_INVALID_ARG;
+    }
+    try {
+        ObjectiveSpec spec;
+        spec.present = true; spec.maximize = maximize;
+        spec.variable_ids.assign(ids, ids + count);
+        spec.callback = callback; spec.userdata = userdata;
+        handle->objective = std::move(spec);
+        clear_result(handle);
+        return GHOST_SUCCESS;
+    } catch (const std::bad_alloc &) { return GHOST_ERROR_MEMORY; }
 }
 
 GhostOptionsHandle ghost_create_options(void) {
@@ -565,15 +666,22 @@ GhostStatus ghost_solve(
     clear_result(handle);
     const auto started = std::chrono::steady_clock::now();
     try {
+        ghost::Options options = options_handle == nullptr
+            ? ghost::Options()
+            : options_handle->options;
+        const bool has_callbacks = handle->objective.callback ||
+            std::any_of(handle->constraints.begin(), handle->constraints.end(),
+                        [](const auto &spec) { return spec.callback != nullptr; });
+        if (has_callbacks && (options.parallel_runs || options.number_threads != 1)) {
+            handle->last_error = "Callbacks require parallel_runs=false and number_threads=1; use independent caller-thread sessions for parallelism.";
+            return GHOST_ERROR_API_USAGE;
+        }
         DynamicModelBuilder builder(
             handle->permutation_problem,
             handle->variables,
             handle->constraints,
             handle->objective);
         ghost::Solver solver(builder);
-        ghost::Options options = options_handle == nullptr
-            ? ghost::Options()
-            : options_handle->options;
         double final_cost = std::numeric_limits<double>::quiet_NaN();
         std::vector<int> final_solution;
         const bool found = solver.fast_search(

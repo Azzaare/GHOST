@@ -24,6 +24,16 @@ typedef struct GhostSessionHandle_t *GhostSessionHandle;
 struct GhostOptionsHandle_t;
 typedef struct GhostOptionsHandle_t *GhostOptionsHandle;
 
+/* A callback returns GHOST_SUCCESS and writes a finite value. Constraint errors
+ * must also be nonnegative. Values are borrowed only for this call, in scope
+ * order. Userdata remains owned by the caller until the session is destroyed.
+ * Callbacks execute synchronously on the thread calling ghost_solve; sessions
+ * containing callbacks reject native parallel execution. No exception may cross
+ * this C boundary. Return a negative GhostStatus to abort the solve instead. */
+typedef int (*GhostEvaluationCallback)(const int *values, size_t count,
+                                     double *result, void *userdata);
+GHOST_C_API unsigned ghost_c_api_version(void);
+
 typedef enum {
     GHOST_SUCCESS = 0,
     GHOST_SAT_FOUND = 1,
@@ -97,6 +107,15 @@ GHOST_C_API int ghost_add_alldifferent_constraint(
     GhostSessionHandle handle,
     const int *variable_ids,
     size_t number_variables
+);
+
+GHOST_C_API int ghost_add_callback_constraint(
+    GhostSessionHandle handle, const int *variable_ids, size_t number_variables,
+    GhostEvaluationCallback callback, void *userdata
+);
+GHOST_C_API GhostStatus ghost_set_callback_objective(
+    GhostSessionHandle handle, bool maximize, const int *variable_ids,
+    size_t number_variables, GhostEvaluationCallback callback, void *userdata
 );
 
 /* The constant is included in the objective value reported after solve. */

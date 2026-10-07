@@ -135,7 +135,7 @@ set(libExternalHeadersList
 	"${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/randutils.hpp")
 
 # add the targets
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(toAddInLibs
 	src/variable.cpp

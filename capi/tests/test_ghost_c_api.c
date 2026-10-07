@@ -154,6 +154,35 @@ static int test_timeout_is_not_infeasible(void) {
     return 0;
 }
 
+static int test_partial_objective_scope(void) {
+    GhostSessionHandle session = ghost_create_session(false);
+    GhostOptionsHandle options = ghost_create_options();
+    int ids[3], values[3];
+    double coefficients[2] = {1.0, 1.0};
+    double costs[2] = {2.0, 1.0}, objective;
+    for (int i = 0; i < 3; ++i) {
+        ids[i] = ghost_add_variable(session, 1, 3, NULL);
+        ghost_set_variable_start(session, ids[i], i + 1);
+    }
+    ghost_add_alldifferent_constraint(session, ids, 3);
+    ghost_add_linear_ge_constraint(session, ids, coefficients, 2, 3.0);
+    ghost_set_linear_objective(session, false, ids, costs, 2, 7.0);
+    ghost_set_option_num_threads(options, 1);
+    ghost_set_option_parallel(options, false);
+    if (ghost_solve(session, options, 50000.0) != GHOST_FEASIBLE_FOUND) {
+        fprintf(stderr, "Partial objective failed: %s\n", ghost_get_last_error(session));
+        return 71;
+    }
+    if (ghost_get_variable_values(session, values, 3) != GHOST_SUCCESS) return 72;
+    if (values[0] == values[1] || values[0] == values[2] || values[1] == values[2]) return 73;
+    if (values[0] + values[1] < 3) return 74;
+    if (ghost_get_objective_value(session, &objective) != GHOST_SUCCESS ||
+        objective != 2.0 * values[0] + values[1] + 7.0) return 75;
+    ghost_destroy_session(session);
+    ghost_destroy_options(options);
+    return 0;
+}
+
 static int test_singleton_domain(void) {
     GhostSessionHandle session = ghost_create_session(false);
     int id;
@@ -191,6 +220,8 @@ int main(void) {
     result = test_callbacks();
     if (result != 0) return result;
     result = test_callback_failures();
+    if (result != 0) return result;
+    result = test_partial_objective_scope();
     if (result != 0) return result;
     puts("GHOST C API tests passed.");
     return 0;

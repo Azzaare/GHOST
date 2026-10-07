@@ -107,18 +107,34 @@ namespace ghost
 		Objective( const std::vector<int>& variables_index, bool is_maximization, const std::string& name );
 		Objective( const std::vector<Variable>& variables, bool is_maximization, const std::string& name );
 
-		inline void update( int index, int new_value ) { conditional_update_data_structures( _variables, _variables_position[ index ], new_value ); }
+		inline void update( int index, int new_value ) {
+			auto position = _variables_position.find( index );
+			if( position != _variables_position.end() )
+				conditional_update_data_structures( _variables, position->second, new_value );
+		}
 
 		// Call required_cost() on Objective::_variables after making sure the cost does not give a nan, rise an exception otherwise.
 		double cost() const;
 
 		// Call expert_heuristic_value on Objective::_variables.
 		inline int heuristic_value( int variable_index, const std::vector<int>& possible_values, randutils::mt19937_rng& rng ) const
-		{ return expert_heuristic_value( _variables, _variables_position.at( variable_index ), possible_values, rng ); }
+		{
+			auto position = _variables_position.find( variable_index );
+			// A constraint may select a variable outside the objective scope.
+			// Every candidate then has the same objective contribution.
+			if( position == _variables_position.end() )
+				return rng.pick( possible_values );
+			return expert_heuristic_value( _variables, position->second, possible_values, rng );
+		}
 
 		// Call expert_heuristic_value_permutation on Objective::_variables.
 		inline int heuristic_value_permutation( int variable_index, const std::vector<int>& bad_variables, randutils::mt19937_rng& rng ) const
-		{ return expert_heuristic_value_permutation( _variables, _variables_position.at( variable_index ), bad_variables, rng ); }
+		{
+			auto position = _variables_position.find( variable_index );
+			if( position == _variables_position.end() )
+				return rng.pick( bad_variables );
+			return expert_heuristic_value_permutation( _variables, position->second, bad_variables, rng );
+		}
 
 		// Call expert_postprocess on Objective::_variables.
 		inline double postprocess( double best_cost ) const
